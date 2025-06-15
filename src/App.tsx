@@ -5,30 +5,28 @@ import classNames from 'classnames';
 import { UserWarning } from './UserWarning';
 import { Todo } from './types/Todo';
 import * as todoService from './api/todos';
-import * as servises from './servises/buttons';
-import { ButtonProp } from './types/Button';
+// import * as servises from './servises/buttons';
+// import { ButtonProp } from './types/Button';
 import { ErrorMessage } from './components/ErrorMessage/ErrorMessage';
+import { TodoFooter } from './components/TodoFooter';
 import { wait } from './servises/delay';
+import * as filterServises from './servises/TodoFooter';
 
 export const App: React.FC = () => {
+  //#region State
   const [todoTitle, setTodoTitle] = useState('');
   const [appliedTitle, setAppliedTitle] = useState('');
   const [loadContent, setLoadedContent] = useState<Todo[]>([]);
-
   const [errorMessage, setErrorMessage] = useState('');
-  const [filteredBy, setFilteredBy] = useState<string>('All');
   const [titleInputState, setTitleInputState] = useState(false);
-
   const [tempTodo, setTempTodo] = useState<Todo[] | null>(null);
-  // const [titleFocus, setTitleFocus] = useState()
+  //#endregion
 
-  // const [isChecked, setIsChecked] = useState<boolean>(false);
-
+  //#region Loading data
   useEffect(() => {
     todoService
       .getTodos()
       .then(response => {
-        // console.log(response);
         setLoadedContent(response);
       })
       .catch(error => {
@@ -39,6 +37,7 @@ export const App: React.FC = () => {
         throw error;
       });
   }, []);
+  //#endregion
 
   const focusItem = useRef<HTMLInputElement | null>(null);
 
@@ -70,44 +69,17 @@ export const App: React.FC = () => {
     }, 1000);
   };
 
-  const filteredButtons: ButtonProp[] = servises.getButtons();
+  //#region Filtering buttons
 
-  const filter = (listOfTodos: Todo[], query: string) => {
-    let sortBy = query;
-
-    if (query === filteredBy) {
-      sortBy = filteredBy;
-    }
-
-    switch (sortBy) {
-      case 'Active':
-        return listOfTodos.filter(item => item.completed === false);
-      case 'Completed':
-        return listOfTodos.filter(item => item.completed === true);
-      default:
-        return listOfTodos;
-    }
-  };
-
-  const handleFilterButtons = async (
-    event: React.MouseEvent<HTMLAnchorElement>,
-  ) => {
-    event.preventDefault();
-
-    const text: string | null = event.currentTarget.textContent;
-
-    if (!text) {
-      return;
-    } else {
-      setFilteredBy(text);
-    }
-
-    const existedTodos = await todoService.getTodos();
-    const filteredTodos = filter(existedTodos, text);
+  const handleFilter = async (filterBy: string) => {
+    const initTodos = await todoService.getTodos();
+    const filteredTodos = filterServises.filter(initTodos, filterBy);
 
     setLoadedContent(filteredTodos);
   };
+  //#endregion
 
+  //#region Add todo
   const handleAddTodo = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -131,7 +103,7 @@ export const App: React.FC = () => {
       await todoService.postTodos(temp);
 
       setTitleInputState(true);
-      setTempTodo(temp);
+      setTempTodo([temp]);
       setLoadedContent(prev => [...prev, temp]);
       await wait(3000);
     } catch (error) {
@@ -143,12 +115,12 @@ export const App: React.FC = () => {
       setTitleInputState(false);
     }
   };
+  //#endregion
 
+  //#region Delete todo
   const handleDeleteTodo = async (dataId: Todo['id']) => {
     try {
-      const deletedData: Todo | undefined = loadContent.find(
-        todo => todo.id === dataId,
-      );
+      const deletedData = loadContent.find(todo => todo.id === dataId);
 
       if (!deletedData) {
         setErrorMessage('Todo not found');
@@ -157,39 +129,29 @@ export const App: React.FC = () => {
       }
 
       await todoService.deleteTodos(dataId);
-      setTempTodo(deletedData);
+
+      if (tempTodo === null) {
+        setTempTodo([deletedData]);
+      } else {
+        setTempTodo(prev => [...(prev ?? []), deletedData]);
+      }
+
       await wait(3000);
+
       setLoadedContent(prevTodos =>
         prevTodos.filter(todo => todo.id !== dataId),
       );
     } catch (error) {
       setErrorMessage('Unable to delete a todo');
-    } finally {
-      setTempTodo(null);
     }
   };
 
-  const handleDeleteFinished = () => {
-    // const finishedTodo
+  const handleDeleteFinished = async () => {
+    const finishedTodos = loadContent.filter(todo => todo.completed);
 
-    const filteredTodos = loadContent.map(todoItem => {
-      if (todoItem.completed === true) {
-        handleDeleteTodo(todoItem.id);
-      }
-    });
-
-    setLoadedContent(filteredTodos);
+    await Promise.all(finishedTodos.map(todo => handleDeleteTodo(todo.id)));
   };
-
-  // const handleChecked = (dataId: Todo['id']) => {
-  //   const newTodoList = loadContent.map(todoItem => {
-  //     return todoItem.id === dataId
-  //       ? { ...todoItem, completed: !todoItem.completed }
-  //       : todoItem;
-  //   });
-
-  //   setLoadedContent(newTodoList);
-  // };
+  //#endregion
 
   return (
     <div className="todoapp">
@@ -237,7 +199,6 @@ export const App: React.FC = () => {
                   type="checkbox"
                   className="todo__status"
                   checked={data.completed}
-                  // onChange={() => handleChecked(data.id)}
                 />
               </label>
 
@@ -271,38 +232,11 @@ export const App: React.FC = () => {
         ))}
 
         {loadContent.length !== 0 && (
-          <footer className="todoapp__footer" data-cy="Footer">
-            <span className="todo-count" data-cy="TodosCounter">
-              {`${loadContent.filter(item => !item.completed).length} items left`}
-            </span>
-
-            {/* Active link should have the 'selected' class */}
-            <nav className="filter" data-cy="Filter">
-              {filteredButtons.map(button => (
-                <a
-                  href={button.href}
-                  className={classNames(`${button.className}`, {
-                    selected: filteredBy === button.name,
-                  })}
-                  data-cy={button.dataCy}
-                  key={button.key}
-                  onClick={handleFilterButtons}
-                >
-                  {button.name}
-                </a>
-              ))}
-            </nav>
-
-            {/* this button should be disabled if there are no completed todos */}
-            <button
-              type="button"
-              className="todoapp__clear-completed"
-              data-cy="ClearCompletedButton"
-              onClick={handleDeleteFinished}
-            >
-              Clear completed
-            </button>
-          </footer>
+          <TodoFooter
+            todoList={loadContent}
+            getFilteredList={handleFilter}
+            clearCompleted={handleDeleteFinished}
+          />
         )}
       </div>
 
