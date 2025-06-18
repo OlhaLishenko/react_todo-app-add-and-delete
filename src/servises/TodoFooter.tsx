@@ -5,12 +5,6 @@ import { Todo } from '../types/Todo';
 export const filteredButtons: ButtonProp[] = buttonsServises.getButtons();
 
 export const filter = (listOfTodos: Todo[], query: string) => {
-  // let sortBy = query;
-
-  // if (query === filteredBy) {
-  //   sortBy = filteredBy;
-  // }
-
   switch (query) {
     case 'Active':
       return listOfTodos.filter(item => item.completed === false);
