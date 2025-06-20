@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/lines-between-class-members */
-import { ButtonProp } from '../types/Button';
+import { ButtonProp } from '../types/ButtonType';
+import { ButtonName } from '../enums/ButtonsEnum';
 
-export const FILTERED_BUTTONS_NAME: string[] = ['all', 'active', 'completed'];
+export const FILTERED_BUTTONS_NAME: ButtonName[] = Object.values(ButtonName);
 
 export class Button {
   name: string;
