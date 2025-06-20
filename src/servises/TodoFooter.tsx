@@ -1,15 +1,16 @@
 import * as buttonsServises from './buttons';
-import { ButtonProp } from '../types/Button';
+import { ButtonProp } from '../types/ButtonType';
 import { Todo } from '../types/Todo';
+import { ButtonName } from '../enums/ButtonsEnum';
 
 export const filteredButtons: ButtonProp[] = buttonsServises.getButtons();
 
-export const filter = (listOfTodos: Todo[], query: string) => {
+export const filter = (listOfTodos: Todo[], query: ButtonName) => {
   switch (query) {
-    case 'Active':
-      return listOfTodos.filter(item => item.completed === false);
-    case 'Completed':
-      return listOfTodos.filter(item => item.completed === true);
+    case ButtonName.ACTIVE:
+      return listOfTodos.filter(item => !item.completed);
+    case ButtonName.COMPLETED:
+      return listOfTodos.filter(item => item.completed);
     default:
       return listOfTodos;
   }

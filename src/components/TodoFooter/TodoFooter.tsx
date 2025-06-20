@@ -2,23 +2,24 @@ import classNames from 'classnames';
 import * as filterServises from '../../servises/TodoFooter';
 import React, { useState } from 'react';
 import { Todo } from '../../types/Todo';
+import { ButtonName } from '../../enums/ButtonsEnum';
 
 type TodoFooterProp = {
   todoList: Todo[];
-  getFilteredList: (filterBy: string) => void;
+  getFilteredList: (filterBy: ButtonName) => void;
   clearCompleted: () => void;
 };
 
 export const TodoFooter: React.FC<TodoFooterProp> = React.memo(
   ({ todoList, getFilteredList, clearCompleted }) => {
-    const [filteredBy, setFilteredBy] = useState<string>('All');
+    const [filteredBy, setFilteredBy] = useState<ButtonName>(ButtonName.ALL);
 
     const handleFilterButtons = (
       event: React.MouseEvent<HTMLAnchorElement>,
     ) => {
       event.preventDefault();
 
-      const text: string | null = event.currentTarget.textContent;
+      const text = event.currentTarget.textContent as ButtonName | null;
 
       if (!text) {
         return;

@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useRef, useState } from 'react';
-import { UserWarning } from './UserWarning';
+import React, { useEffect, useState } from 'react';
+
 import { Todo } from './types/Todo';
 import * as todoService from './api/todos';
 import { ErrorMessage } from './components/ErrorMessage/ErrorMessage';
@@ -9,11 +9,13 @@ import { TodoFooter } from './components/TodoFooter';
 import { wait } from './servises/delay';
 import * as filterServises from './servises/TodoFooter';
 import { TodoList } from './components/TodoList';
+import { Header } from './components/Header';
+import { ButtonName } from './enums/ButtonsEnum';
+
 const LOADING_TIMER = 500;
 const ERROR_TIMER = 3000;
 
 export const App: React.FC = () => {
-  //#region State
   const [todoTitle, setTodoTitle] = useState('');
   const [loadContent, setLoadedContent] = useState<Todo[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -22,9 +24,7 @@ export const App: React.FC = () => {
   const [activeFooter, setActiveFooter] = useState(false);
   const [isSubmiting, setIsSubmiting] = useState(false);
   const [activeTodo, setActiveTodo] = useState<Todo[]>([]);
-  //#endregion
 
-  //#region Loading data
   useEffect(() => {
     todoService
       .getTodos()
@@ -42,24 +42,7 @@ export const App: React.FC = () => {
         throw error;
       });
   }, []);
-  //#endregion
 
-  //#region handle focus
-  const focusItem = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (focusItem.current) {
-      focusItem.current.focus();
-    }
-  }, [loadContent, todoTitle, titleInputState]);
-
-  if (!todoService.USER_ID) {
-    return <UserWarning />;
-  }
-  //#endregion
-
-  //#region handle todo title
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleTodoTitle = (
     event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
@@ -68,18 +51,14 @@ export const App: React.FC = () => {
 
     setTodoTitle(newTitle);
   };
-  //#endregion
 
-  //#region Filtering buttons
-  const handleFilter = async (filterBy: string) => {
+  const handleFilter = async (filterBy: ButtonName) => {
     const initTodos = await todoService.getTodos();
     const filteredTodos = filterServises.filter(initTodos, filterBy);
 
     setLoadedContent(filteredTodos);
   };
-  //#endregion
 
-  //#region Add todo
   const handleAddTodo = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -88,10 +67,12 @@ export const App: React.FC = () => {
     }
 
     setIsSubmiting(true);
+    setTitleInputState(true);
 
     const newTodoTitle = todoTitle.trim();
 
     if (!newTodoTitle) {
+      setTitleInputState(false);
       setErrorMessage('Title should not be empty');
       await wait(3000);
       setErrorMessage('');
@@ -100,17 +81,15 @@ export const App: React.FC = () => {
       return;
     }
 
-    const temp: Todo = {
-      title: newTodoTitle,
-      userId: todoService.USER_ID,
-      completed: false,
-      id: 0,
-    };
-
     try {
-      setTempTodo(temp);
-      setTitleInputState(true);
+      const temp: Todo = {
+        title: newTodoTitle,
+        userId: todoService.USER_ID,
+        completed: false,
+        id: 0,
+      };
 
+      setTempTodo(temp);
       const createdTodo: Todo = await todoService.postTodos(temp);
 
       setLoadedContent(prev => [...prev, createdTodo]);
@@ -127,9 +106,6 @@ export const App: React.FC = () => {
     }
   };
 
-  //#endregion
-
-  //#region Delete todo
   const handleDeleteTodo = async (dataId: Todo['id']) => {
     try {
       const deletedData = loadContent.find(todo => todo.id === dataId);
@@ -220,35 +196,20 @@ export const App: React.FC = () => {
       setErrorMessage('');
     }
   };
-  //#endregion
 
   return (
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
 
       <div className="todoapp__content">
-        <header className="todoapp__header">
-          {/* this button should have `active` class only if all todos are completed */}
-          <button
-            type="button"
-            className="todoapp__toggle-all active"
-            data-cy="ToggleAllButton"
-          />
-
-          {/* Add a todo on form submit */}
-          <form onSubmit={handleAddTodo}>
-            <input
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-              value={todoTitle}
-              onChange={handleTodoTitle}
-              disabled={titleInputState}
-              ref={focusItem}
-            />
-          </form>
-        </header>
+        <Header
+          titleChange={handleTodoTitle}
+          todoTitle={todoTitle}
+          titleState={titleInputState}
+          todoList={loadContent}
+          add={handleAddTodo}
+          isSubmiting={isSubmiting}
+        />
 
         <TodoList
           todos={loadContent}
