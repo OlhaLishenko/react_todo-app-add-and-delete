@@ -39,6 +39,7 @@ export const TodoFooter: React.FC<TodoFooterProp> = React.memo(
           {`${leftoverItems} items left`}
         </span>
 
+        {/* Active link should have the 'selected' class */}
         <nav className="filter" data-cy="Filter">
           {filterServises.filteredButtons.map(button => (
             <a
@@ -55,6 +56,7 @@ export const TodoFooter: React.FC<TodoFooterProp> = React.memo(
           ))}
         </nav>
 
+        {/* this button should be disabled if there are no completed todos */}
         <button
           type="button"
           className="todoapp__clear-completed"
