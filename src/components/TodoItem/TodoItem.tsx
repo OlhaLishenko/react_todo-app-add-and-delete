@@ -5,15 +5,13 @@ import { Todo } from '../../types/Todo';
 import { Loader } from '../Loader';
 
 type TodoItemProps = {
-  tempTodo: Todo | null;
   deleteTodo: (todoId: Todo['id']) => void;
   handleActiveTodo: (todoId: Todo['id']) => void;
-  activeTodo: Todo[];
+  activeTodo?: Todo[];
   todo: Todo;
 };
 
 export const TodoItem: React.FC<TodoItemProps> = ({
-  tempTodo,
   deleteTodo,
   handleActiveTodo,
   activeTodo,
@@ -48,7 +46,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           {title}
         </span>
 
-        {/* Remove button appears only on hover */}
         <button
           type="button"
           className="todo__remove"
@@ -60,36 +57,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
         <Loader activeTodo={activeTodo} todoId={id} />
       </div>
-
-      {tempTodo && (
-        <div
-          key={tempTodo.id}
-          data-cy="Todo"
-          className={classNames('todo', {
-            completed: tempTodo.completed,
-          })}
-        >
-          <label className="todo__status-label">
-            <input
-              data-cy="TodoStatus"
-              type="checkbox"
-              className="todo__status"
-              checked={tempTodo.completed}
-            />
-          </label>
-
-          <span data-cy="TodoTitle" className="todo__title">
-            {tempTodo.title}
-          </span>
-
-          {/* Remove button appears only on hover */}
-          <button type="button" className="todo__remove" data-cy="TodoDelete">
-            ×
-          </button>
-
-          <Loader tempTodo={tempTodo} />
-        </div>
-      )}
     </>
   );
 };

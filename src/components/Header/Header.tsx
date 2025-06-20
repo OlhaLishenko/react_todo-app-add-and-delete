@@ -9,6 +9,7 @@ type HeaderProps = {
   titleState: boolean;
   todoList: Todo[];
   add: (event: React.FormEvent<HTMLFormElement>) => void;
+  isSubmiting: boolean;
 };
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,31 +18,28 @@ export const Header: React.FC<HeaderProps> = ({
   titleState,
   todoList,
   add,
+  isSubmiting,
 }) => {
-  //#region handle focus
   const focusItem = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (focusItem.current) {
       focusItem.current.focus();
     }
-  }, [todoList, todoTitle, titleState]);
+  }, [todoList, todoTitle, isSubmiting]);
 
   if (!todoService.USER_ID) {
     return <UserWarning />;
   }
-  //#endregion
 
   return (
     <header className="todoapp__header">
-      {/* this button should have `active` class only if all todos are completed */}
       <button
         type="button"
         className="todoapp__toggle-all active"
         data-cy="ToggleAllButton"
       />
 
-      {/* Add a todo on form submit */}
       <form onSubmit={add}>
         <input
           data-cy="NewTodoField"

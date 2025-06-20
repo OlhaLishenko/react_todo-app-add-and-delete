@@ -5,25 +5,20 @@ import React, { useEffect, useState } from 'react';
 type LoaderProps = {
   activeTodo?: Todo[];
   todoId?: Todo['id'];
-  tempTodo?: Todo;
 };
 
-export const Loader: React.FC<LoaderProps> = ({
-  activeTodo,
-  todoId,
-  tempTodo,
-}) => {
+export const Loader: React.FC<LoaderProps> = ({ activeTodo, todoId }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (tempTodo) {
+    if (todoId === 0) {
       setIsLoading(true);
     }
 
     if (activeTodo?.some(item => item.id === todoId)) {
       setIsLoading(true);
     }
-  }, [todoId, tempTodo, activeTodo]);
+  }, [todoId, activeTodo]);
 
   return (
     <div

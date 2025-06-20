@@ -25,12 +25,19 @@ export const TodoList: React.FC<TodoListProps> = ({
         <TodoItem
           todo={todo}
           key={todo.id}
-          tempTodo={tempTodo}
           deleteTodo={deleteTodo}
           handleActiveTodo={handleActiveTodo}
           activeTodo={activeTodo}
         />
       ))}
+
+      {tempTodo && (
+        <TodoItem
+          todo={tempTodo}
+          deleteTodo={() => {}}
+          handleActiveTodo={() => {}}
+        />
+      )}
     </section>
   );
 };

@@ -16,7 +16,6 @@ const LOADING_TIMER = 500;
 const ERROR_TIMER = 3000;
 
 export const App: React.FC = () => {
-  //#region State
   const [todoTitle, setTodoTitle] = useState('');
   const [loadContent, setLoadedContent] = useState<Todo[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -25,9 +24,7 @@ export const App: React.FC = () => {
   const [activeFooter, setActiveFooter] = useState(false);
   const [isSubmiting, setIsSubmiting] = useState(false);
   const [activeTodo, setActiveTodo] = useState<Todo[]>([]);
-  //#endregion
 
-  //#region Loading data
   useEffect(() => {
     todoService
       .getTodos()
@@ -45,10 +42,7 @@ export const App: React.FC = () => {
         throw error;
       });
   }, []);
-  //#endregion
 
-  //#region handle todo title
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleTodoTitle = (
     event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
@@ -57,18 +51,14 @@ export const App: React.FC = () => {
 
     setTodoTitle(newTitle);
   };
-  //#endregion
 
-  //#region Filtering buttons
   const handleFilter = async (filterBy: ButtonName) => {
     const initTodos = await todoService.getTodos();
     const filteredTodos = filterServises.filter(initTodos, filterBy);
 
     setLoadedContent(filteredTodos);
   };
-  //#endregion
 
-  //#region Add todo
   const handleAddTodo = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -77,10 +67,12 @@ export const App: React.FC = () => {
     }
 
     setIsSubmiting(true);
+    setTitleInputState(true);
 
     const newTodoTitle = todoTitle.trim();
 
     if (!newTodoTitle) {
+      setTitleInputState(false);
       setErrorMessage('Title should not be empty');
       await wait(3000);
       setErrorMessage('');
@@ -89,17 +81,15 @@ export const App: React.FC = () => {
       return;
     }
 
-    const temp: Todo = {
-      title: newTodoTitle,
-      userId: todoService.USER_ID,
-      completed: false,
-      id: 0,
-    };
-
     try {
-      setTempTodo(temp);
-      setTitleInputState(true);
+      const temp: Todo = {
+        title: newTodoTitle,
+        userId: todoService.USER_ID,
+        completed: false,
+        id: 0,
+      };
 
+      setTempTodo(temp);
       const createdTodo: Todo = await todoService.postTodos(temp);
 
       setLoadedContent(prev => [...prev, createdTodo]);
@@ -116,9 +106,6 @@ export const App: React.FC = () => {
     }
   };
 
-  //#endregion
-
-  //#region Delete todo
   const handleDeleteTodo = async (dataId: Todo['id']) => {
     try {
       const deletedData = loadContent.find(todo => todo.id === dataId);
@@ -209,7 +196,6 @@ export const App: React.FC = () => {
       setErrorMessage('');
     }
   };
-  //#endregion
 
   return (
     <div className="todoapp">
@@ -222,6 +208,7 @@ export const App: React.FC = () => {
           titleState={titleInputState}
           todoList={loadContent}
           add={handleAddTodo}
+          isSubmiting={isSubmiting}
         />
 
         <TodoList
